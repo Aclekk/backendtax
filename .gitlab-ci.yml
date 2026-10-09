@@ -1,0 +1,37 @@
+stages:
+  - deploy
+
+# Pola sama seperti delami-pass-api / delami-cleanser-api:
+# GitLab Runner (shell) sudah jalan di server Ubuntu Huawei,
+# lalu rsync + docker compose di mesin yang sama.
+# Hanya container tax-refund-api yang di-restart.
+deploy_production:
+  stage: deploy
+  variables:
+    DEPLOY_DIR: /home/ubuntu/docker/tax_refund_api
+
+  tags:
+    - tax_refund_api
+
+  only:
+    - main
+    - master
+
+  script:
+    - mkdir -p "$DEPLOY_DIR"
+    - rsync -a --no-owner --no-group --delete --exclude '.git' --exclude 'bin' --exclude 'obj' --exclude '.vs' --exclude '*.log' --exclude '.env' --exclude 'Uploads' "$CI_PROJECT_DIR"/ "$DEPLOY_DIR"/
+    - |
+      if [ ! -f "$DEPLOY_DIR/.env" ]; then
+        echo "ERROR: File $DEPLOY_DIR/.env belum ada di server"
+        echo "Buat dulu (isi kredensial production), contoh:"
+        echo "  nano $DEPLOY_DIR/.env"
+        exit 1
+      fi
+    - cd "$DEPLOY_DIR"
+    - docker compose -p tax_refund_api down --remove-orphans || true
+    - docker rm -f tax-refund-api || true
+    - docker compose -p tax_refund_api up -d --build
+    - docker compose -p tax_refund_api ps
+    - sleep 8
+    - 'curl -fsS http://127.0.0.1:5158/health'
+    - docker image prune -f

@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+.env
+Uploads/
+*.user
+*.log
+buildlog.txt
+runlog.txt
+appsettings*.json
+!appsettings.example.json

@@ -1,0 +1,10 @@
+bin/
+obj/
+.git/
+.vs/
+*.user
+*.log
+Uploads/
+.env
+deploy-setup.sh
+**/.DS_Store

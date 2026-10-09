@@ -1,0 +1,41 @@
+services:
+  tax-refund-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tax-refund-api:local
+    container_name: tax-refund-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5158
+    ports:
+      - "5158:5158"
+    volumes:
+      - tax_refund_uploads:/app/Uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - tax-refund-net
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5158/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  tax-refund-net:
+    name: tax-refund-net
+    driver: bridge
+
+volumes:
+  tax_refund_uploads:
+    name: tax_refund_uploads
